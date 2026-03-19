@@ -1,0 +1,151 @@
+# Flight Tracker Route Configuration
+# Rio de Janeiro to California Routes
+
+routes:
+  # Galeão International Airport (GIG) Routes
+  - departure: GIG
+    arrival: LAX
+    duration_days: 6
+    cabin_class: economy
+    max_stops: 2
+    enabled: true
+    priority: high
+    description: "Rio de Janeiro (Galeão) to Los Angeles International"
+    
+  - departure: GIG
+    arrival: SFO
+    duration_days: 6
+    cabin_class: economy  
+    max_stops: 2
+    enabled: true
+    priority: high
+    description: "Rio de Janeiro (Galeão) to San Francisco International"
+  
+  # Santos Dumont Airport (SDU) Routes  
+  - departure: SDU
+    arrival: LAX
+    duration_days: 6
+    cabin_class: economy
+    max_stops: 2
+    enabled: false  # Less common route
+    priority: low
+    description: "Rio de Janeiro (Santos Dumont) to Los Angeles International"
+    
+  - departure: SDU
+    arrival: SFO
+    duration_days: 6
+    cabin_class: economy
+    max_stops: 2
+    enabled: false  # Less common route
+    priority: low
+    description: "Rio de Janeiro (Santos Dumont) to San Francisco International"
+
+# Airport Information
+airports:
+  GIG:
+    name: "Galeão - Tom Jobim International Airport"
+    city: "Rio de Janeiro"
+    country: "Brazil"
+    timezone: "America/Sao_Paulo"
+    iata: "GIG"
+    icao: "SBGL"
+    
+  SDU:
+    name: "Santos Dumont Airport"
+    city: "Rio de Janeiro" 
+    country: "Brazil"
+    timezone: "America/Sao_Paulo"
+    iata: "SDU"
+    icao: "SBRJ"
+    note: "Domestic and limited international flights"
+    
+  LAX:
+    name: "Los Angeles International Airport"
+    city: "Los Angeles"
+    state: "California"
+    country: "United States"
+    timezone: "America/Los_Angeles"
+    iata: "LAX"
+    icao: "KLAX"
+    
+  SFO:
+    name: "San Francisco International Airport"
+    city: "San Francisco"
+    state: "California" 
+    country: "United States"
+    timezone: "America/Los_Angeles"
+    iata: "SFO"
+    icao: "KSFO"
+
+# Monitoring Settings
+monitoring:
+  search_window_days: 90        # Look ahead 90 days
+  check_interval_hours: 3       # Check every 3 hours
+  flexible_dates: true          # Search ±3 days around target
+  max_concurrent_searches: 3    # Parallel route searches
+  
+  # Date preferences
+  preferred_departure_days: ["monday", "tuesday", "wednesday", "thursday"]
+  avoid_departure_days: ["friday", "saturday", "sunday"]  # Higher prices
+  
+  # Seasonal adjustments
+  peak_seasons:
+    - start: "2024-12-15"
+      end: "2025-01-15" 
+      multiplier: 1.5
+      description: "Christmas/New Year peak season"
+    - start: "2024-07-01"
+      end: "2024-08-31"
+      multiplier: 1.3
+      description: "US summer vacation season"
+    - start: "2024-02-10"
+      end: "2024-02-17"
+      multiplier: 1.4
+      description: "Carnival week in Brazil"
+
+# Price Thresholds
+alerts:
+  price_drop_threshold: 0.15    # 15% drop triggers alert
+  deal_threshold: 0.80          # 20% below average = deal
+  excellent_deal_threshold: 0.70 # 30% below average = excellent deal
+  min_savings_brl: 100          # Minimum R$ 100 savings to alert
+  
+  # Target price ranges (Brazilian Reais)
+  target_prices:
+    GIG-LAX:
+      excellent: 2500
+      good: 3000  
+      fair: 3500
+      expensive: 4000
+      
+    GIG-SFO:
+      excellent: 2800
+      good: 3300
+      fair: 3800
+      expensive: 4300
+
+# Notification Settings  
+notifications:
+  max_alerts_per_day: 5
+  cooldown_hours: 4             # Wait 4 hours between similar alerts
+  
+  # Alert priorities
+  priority_levels:
+    excellent_deal: 1           # Send immediately
+    price_drop: 2               # Send within 1 hour
+    target_reached: 2           # Send within 1 hour  
+    good_deal: 3                # Send in daily digest
+    
+  # Notification channels
+  channels:
+    email:
+      enabled: true
+      priority_threshold: 2     # Send alerts priority 2 and above
+      
+    telegram:
+      enabled: true  
+      priority_threshold: 1     # Send alerts priority 1 and above
+      
+    discord:
+      enabled: false
+      priority_threshold: 1
