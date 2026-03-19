@@ -17,7 +17,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY standalone_monitor.py .
+COPY simple_health_server.py .
+COPY railway.json .
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
@@ -26,9 +28,10 @@ RUN mkdir -p /app/data
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV DATABASE_URL=sqlite:///data/flights.db
+ENV PORT=8000
 
-# Expose port for health checks
-EXPOSE 8000
+# Expose port for health checks (Railway auto-detects this)
+EXPOSE $PORT
 
 # Make scripts executable
 RUN chmod +x standalone_monitor.py

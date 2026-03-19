@@ -251,8 +251,9 @@ class AlertManager:
 class HealthCheckServer:
     """Simple HTTP health check server."""
     
-    def __init__(self, port=8000):
-        self.port = port
+    def __init__(self, port=None):
+        # Use Railway's PORT environment variable if available
+        self.port = port or int(os.getenv('PORT', '8000'))
         self.server = None
         self.thread = None
         
@@ -261,41 +262,82 @@ class HealthCheckServer:
         
         class HealthHandler(BaseHTTPRequestHandler):
             def do_GET(self):
-                if self.path == '/health':
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    
-                    health_data = {
-                        'status': 'healthy',
-                        'service': 'flight-tracker-rio-california',
-                        'timestamp': datetime.now().isoformat(),
-                        'routes': ['GIG-LAX', 'GIG-SFO', 'SDU-LAX', 'SDU-SFO']
-                    }
-                    
-                    self.wfile.write(json.dumps(health_data).encode())
-                else:
-                    self.send_response(404)
+                try:
+                    if self.path == '/health' or self.path == '/':
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        
+                        health_data = {
+                            'status': 'healthy',
+                            'service': 'flight-tracker-rio-california',
+                            'timestamp': datetime.now().isoformat(),
+                            'routes': ['GIG-LAX', 'GIG-SFO', 'SDU-LAX', 'SDU-SFO'],
+                            'port': self.server.server_address[1]
+                        }
+                        
+                        self.wfile.write(json.dumps(health_data, indent=2).encode())
+                    else:
+                        self.send_response(404)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(b'{"error": "Not Found"}')
+                except Exception as e:
+                    logger.error(f"Health check request failed: {str(e)}")
+                    self.send_response(500)
                     self.end_headers()
             
             def log_message(self, format, *args):
-                pass  # Suppress HTTP access logs
+                # Log health checks for debugging
+                logger.debug(f"Health check: {format % args}")
         
-        try:
-            self.server = HTTPServer(('0.0.0.0', self.port), HealthHandler)
-            
-            def run_server():
-                logger.info(f"🏥 Health check server starting on port {self.port}")
-                self.server.serve_forever()
-            
-            self.thread = threading.Thread(target=run_server, daemon=True)
-            self.thread.start()
-            
-            return True
-            
-        except Exception as e:
-            logger.warning(f"Health check server failed: {str(e)}")
-            return False
+        # Try multiple ports to avoid conflicts
+        ports_to_try = [self.port, 8080, 3000, 5000]
+        
+        for port in ports_to_try:
+            try:
+                self.server = HTTPServer(('0.0.0.0', port), HealthHandler)
+                self.port = port  # Update to actual port used
+                
+                def run_server():
+                    logger.info(f"🏥 Health check server READY on 0.0.0.0:{port}")
+                    logger.info(f"📋 Health endpoint: http://0.0.0.0:{port}/health")
+                    try:
+                        self.server.serve_forever()
+                    except Exception as e:
+                        logger.error(f"Health server crashed: {str(e)}")
+                
+                self.thread = threading.Thread(target=run_server, daemon=True)
+                self.thread.start()
+                
+                # Give server time to start
+                import time
+                time.sleep(1)
+                
+                # Test the server quickly
+                try:
+                    import urllib.request
+                    urllib.request.urlopen(f'http://localhost:{port}/health', timeout=2)
+                    logger.info(f"✅ Health check server verified on port {port}")
+                except:
+                    logger.warning(f"⚠️  Health check server started but not responding on port {port}")
+                
+                return True
+                
+            except OSError as e:
+                if "Address already in use" in str(e):
+                    logger.warning(f"Port {port} in use, trying next...")
+                    continue
+                else:
+                    logger.error(f"Failed to start health server on port {port}: {str(e)}")
+                    continue
+            except Exception as e:
+                logger.error(f"Unexpected error starting health server on port {port}: {str(e)}")
+                continue
+        
+        logger.error("❌ Could not start health check server on any port")
+        return False
 
 class FlightMonitor:
     """Main flight monitoring service."""
@@ -376,8 +418,18 @@ class FlightMonitor:
         logger.info(f"⏰ Check interval: {self.check_interval_hours} hours")
         logger.info(f"🚨 Alert threshold: {os.getenv('PRICE_DROP_THRESHOLD', '0.12')} drop")
         
-        # Start health check server
-        self.health_server.start()
+        # Start health check server FIRST (Railway needs this immediately)
+        logger.info("🏥 Starting health check server...")
+        health_started = self.health_server.start()
+        
+        if health_started:
+            logger.info("✅ Health check server ready for Railway")
+        else:
+            logger.warning("⚠️  Health check server failed to start")
+        
+        # Give health server time to be ready
+        import time
+        time.sleep(2)
         
         cycle = 0
         
@@ -426,18 +478,45 @@ def main():
     print("🚨 Price drop detection & notifications")
     print()
     
-    # Setup
+    # Setup environment first
     setup_environment()
+    
+    # Start health check server IMMEDIATELY (Railway needs this)
+    print("🏥 Starting health check server for Railway...")
+    
+    try:
+        from simple_health_server import start_health_server
+        health_server, health_thread = start_health_server()
+        
+        if health_server:
+            print("✅ Health check server ready - Railway should detect this")
+        else:
+            print("⚠️  Health check server failed, using fallback...")
+            health_server = None
+            
+    except ImportError:
+        print("⚠️  simple_health_server not available, using built-in health check...")
+        health_server = None
+    except Exception as e:
+        print(f"⚠️  Health server error: {str(e)}, continuing anyway...")
+        health_server = None
+    
+    # Give health server time to be ready for Railway
+    import time
+    time.sleep(3)
     
     # Signal handlers
     def signal_handler(signum, frame):
         logger.info(f"Received signal {signum}, shutting down...")
+        if health_server:
+            health_server.shutdown()
         sys.exit(0)
     
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     
     # Start monitoring
+    print("🚀 Starting flight monitoring system...")
     monitor = FlightMonitor()
     monitor.run_forever()
 
