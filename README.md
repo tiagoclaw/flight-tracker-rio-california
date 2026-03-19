@@ -16,11 +16,20 @@
 # Install dependencies
 pip install -r requirements.txt
 
-# Run price tracker
-python tracker.py
+# Test scrapers (recommended first step)
+python test_scrapers.py
+
+# Single price check
+python main.py check GIG LAX 2026-04-15
+
+# Start continuous monitoring
+python main.py monitor
 
 # View price history  
-python analyzer.py --route RIO-LAX --days 30
+python main.py history GIG-LAX --days 30
+
+# Add price alert
+python main.py alert GIG-LAX your@email.com price_drop 0.15
 ```
 
 ## Routes Monitored
@@ -236,10 +245,12 @@ python scripts/export_prices.py --route GIG-SFO --format json --all
 
 ### Phase 1 (Week 1) - MVP
 - [x] Project setup + repository
-- [ ] Basic Google Flights scraping  
-- [ ] SQLite data storage
-- [ ] Simple email alerts
-- [ ] Basic price tracking
+- [x] ✅ **Google Flights scraping** (Selenium WebDriver)
+- [x] ✅ **Kayak scraping** (HTTP + HTML parsing)  
+- [x] ✅ **Mock scraper** (realistic test data)
+- [x] ✅ **SQLite data storage** (models + operations)
+- [x] ✅ **Email + Telegram alerts** (implemented)
+- [x] ✅ **Price tracking system** (trends + analysis)
 
 ### Phase 2 (Week 2) - Multi-source
 - [ ] Kayak integration

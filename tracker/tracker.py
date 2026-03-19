@@ -14,6 +14,7 @@ from .storage.models import Flight, PriceAlert, DatabaseManager, CabinClass
 from .storage.database import DatabaseOperations
 from .scrapers.google_flights import GoogleFlightsScraper
 from .scrapers.kayak import KayakScraper
+from .scrapers.mock_scraper import MockFlightScraper
 from .analyzer.trends import PriceAnalyzer
 from .notifiers.email import EmailNotifier
 from .notifiers.telegram import TelegramNotifier
@@ -86,10 +87,22 @@ class FlightTracker:
         self.db_ops = DatabaseOperations(self.db_manager)
         
         # Initialize scrapers
-        self.scrapers = {
-            'google_flights': GoogleFlightsScraper(),
-            'kayak': KayakScraper(),
-        }
+        use_mock = os.getenv('USE_MOCK_SCRAPER', 'false').lower() == 'true'
+        
+        if use_mock:
+            # Use mock scraper for testing/development
+            self.scrapers = {
+                'mock_scraper': MockFlightScraper(),
+            }
+            logger.info("Using mock scraper for testing")
+        else:
+            # Use real scrapers for production
+            self.scrapers = {
+                'google_flights': GoogleFlightsScraper(),
+                'kayak': KayakScraper(),
+                'mock_scraper': MockFlightScraper(),  # Keep as fallback
+            }
+            logger.info("Using real scrapers (Google Flights + Kayak + Mock)")
         
         # Initialize analyzer
         self.analyzer = PriceAnalyzer(self.db_ops)
