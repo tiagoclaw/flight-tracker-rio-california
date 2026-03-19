@@ -22,6 +22,7 @@ COPY simple_health_server.py .
 COPY api.py .
 COPY web_server.py .
 COPY dashboard.html .
+COPY railway_start.py .
 COPY railway.json .
 
 # Create data directory for SQLite
@@ -37,7 +38,7 @@ ENV PORT=8000
 EXPOSE $PORT
 
 # Make scripts executable
-RUN chmod +x standalone_monitor.py
+RUN chmod +x railway_start.py standalone_monitor.py
 
-# Default command - standalone monitor (no external dependencies)
-CMD ["python", "standalone_monitor.py"]
+# Default command - Railway optimized startup
+CMD ["python", "railway_start.py"]

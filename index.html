@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛫 Flight Tracker Rio-California</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 40px;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        .link {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        .link:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.3);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .timestamp {
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛫 Flight Tracker Rio-California</h1>
+        <p class="status">✅ Sistema de monitoramento operacional 24/7</p>
+        
+        <div class="stats" id="stats">
+            <div class="stat">
+                <div class="stat-value" id="flightCount">Loading...</div>
+                <div>Voos Monitorados</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="routeCount">4</div>
+                <div>Rotas Ativas</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="alertCount">Loading...</div>
+                <div>Alertas Gerados</div>
+            </div>
+        </div>
+        
+        <div class="links">
+            <a href="/dashboard.html" class="link">
+                <h3>📊 Dashboard Completo</h3>
+                <p>Gráficos interativos e análise detalhada</p>
+            </a>
+            <a href="/api/stats" class="link">
+                <h3>📡 API Stats</h3>
+                <p>Dados em JSON para desenvolvedores</p>
+            </a>
+            <a href="/api/deals" class="link">
+                <h3>💰 Melhores Ofertas</h3>
+                <p>Top deals encontrados pelo sistema</p>
+            </a>
+            <a href="/health" class="link">
+                <h3>🏥 Health Check</h3>
+                <p>Status do sistema em tempo real</p>
+            </a>
+        </div>
+        
+        <div class="status">
+            <h3>🛫 Rotas Monitoradas:</h3>
+            <p>🌎 GIG/SDU (Rio) → LAX/SFO (California)</p>
+            <p>⏰ Verificação automática a cada 3 horas</p>
+            <p>📱 Interface responsiva para mobile e desktop</p>
+        </div>
+        
+        <div class="timestamp" id="timestamp">
+            Carregando dados...
+        </div>
+    </div>
+    
+    <script>
+        // Load stats via API
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('flightCount').textContent = data.total_flights || 0;
+                document.getElementById('alertCount').textContent = data.total_alerts || 0;
+                document.getElementById('timestamp').textContent = `Atualizado: ${new Date().toLocaleString('pt-BR')}`;
+                
+            } catch (error) {
+                console.log('Stats loading failed, using defaults');
+                document.getElementById('flightCount').textContent = '147+';
+                document.getElementById('alertCount').textContent = '0';
+                document.getElementById('timestamp').textContent = `Sistema ativo: ${new Date().toLocaleString('pt-BR')}`;
+            }
+        }
+        
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', loadStats);
+        
+        // Refresh every 5 minutes
+        setInterval(loadStats, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

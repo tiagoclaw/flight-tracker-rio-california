@@ -5,9 +5,9 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "python standalone_monitor.py",
+    "startCommand": "python railway_start.py",
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
+    "healthcheckTimeout": 60,
     "restartPolicyType": "always"
   }
 }
