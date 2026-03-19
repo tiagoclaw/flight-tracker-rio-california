@@ -1,0 +1,16 @@
+# Minimal requirements for standalone_monitor.py
+# Only what's actually needed for Railway deployment
+
+requests==2.31.0
+
+# Note: standalone_monitor.py uses only:
+# - requests (for HTTP)
+# - sqlite3 (built-in with Python)
+# - asyncio (built-in with Python)
+# - json (built-in with Python)
+# - datetime (built-in with Python)
+# - logging (built-in with Python)
+# - hashlib (built-in with Python)
+# - random (built-in with Python)
+# - threading (built-in with Python)
+# - http.server (built-in with Python)

@@ -1,0 +1,43 @@
+FROM python:3.12-slim
+
+# Install only essential system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+WORKDIR /app
+
+# Upgrade pip first to avoid version conflicts
+RUN pip install --upgrade pip
+
+# Install requests directly (only dependency we need)
+RUN pip install --no-cache-dir requests==2.31.0
+
+# Copy application code
+COPY standalone_monitor.py .
+COPY railway.json .
+
+# Create data directory for SQLite
+RUN mkdir -p /app/data
+
+# Environment variables with defaults
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV DATABASE_URL=sqlite:///data/flights.db
+ENV CHECK_INTERVAL_HOURS=3
+ENV PRICE_DROP_THRESHOLD=0.12
+ENV USE_MOCK_SCRAPER=true
+
+# Expose port for health checks
+EXPOSE 8000
+
+# Make script executable
+RUN chmod +x standalone_monitor.py
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the standalone monitor
+CMD ["python", "standalone_monitor.py"]
