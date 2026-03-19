@@ -5,7 +5,7 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "python railway_start.py",
+    "startCommand": "python railway_start_fixed.py",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 60,
     "restartPolicyType": "always"

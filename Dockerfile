@@ -23,6 +23,8 @@ COPY api.py .
 COPY web_server.py .
 COPY dashboard.html .
 COPY railway_start.py .
+COPY railway_start_fixed.py .
+COPY simple_api_server.py .
 COPY railway.json .
 
 # Create data directory for SQLite
@@ -40,5 +42,5 @@ EXPOSE $PORT
 # Make scripts executable
 RUN chmod +x railway_start.py standalone_monitor.py
 
-# Default command - Railway optimized startup
-CMD ["python", "railway_start.py"]
+# Default command - Railway optimized startup with CORS
+CMD ["python", "railway_start_fixed.py"]
