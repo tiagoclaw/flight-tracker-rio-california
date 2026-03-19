@@ -29,7 +29,7 @@ ENV DATABASE_URL=sqlite:///data/flights.db
 EXPOSE 8000
 
 # Make scripts executable
-RUN chmod +x prod_start.py
+RUN chmod +x standalone_monitor.py
 
-# Default command - production startup
-CMD ["python", "prod_start.py"]
+# Default command - standalone monitor (no external dependencies)
+CMD ["python", "standalone_monitor.py"]
