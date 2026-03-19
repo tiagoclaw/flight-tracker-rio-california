@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛫 Flight Tracker Rio-California | Dashboard</title>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        .deals-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .deals-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .deals-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .deal-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .deal-item:hover {
+            background: #f0f2ff;
+            transform: translateX(5px);
+        }
+
+        .deal-route {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .deal-price {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .deal-details {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .route-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .route-selector select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin: 0 10px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .route-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🛫 Flight Tracker Rio-California</h1>
+            <p>Monitoramento em tempo real de preços de voos Rio → Los Angeles/San Francisco</p>
+        </header>
+
+        <div id="loading" class="loading">
+            <p>🔄 Carregando dados de voos...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>❌ Erro ao carregar dados. Verifique se o sistema está funcionando.</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Route Selector -->
+            <div class="route-selector">
+                <label for="routeSelect">📍 Filtrar por rota:</label>
+                <select id="routeSelect">
+                    <option value="">Todas as rotas</option>
+                    <option value="GIG-LAX">Rio Galeão → Los Angeles</option>
+                    <option value="GIG-SFO">Rio Galeão → San Francisco</option>
+                    <option value="SDU-LAX">Rio Santos Dumont → Los Angeles</option>
+                    <option value="SDU-SFO">Rio Santos Dumont → San Francisco</option>
+                </select>
+                <button class="refresh-btn" onclick="loadData()">🔄 Atualizar</button>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">✈️</div>
+                    <div class="value" id="totalFlights">0</div>
+                    <div class="label">Voos Monitorados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🚨</div>
+                    <div class="value" id="totalAlerts">0</div>
+                    <div class="label">Alertas de Preço</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🛫</div>
+                    <div class="value" id="routeCount">0</div>
+                    <div class="label">Rotas Ativas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">💰</div>
+                    <div class="value" id="bestDeal">R$ 0</div>
+                    <div class="label">Melhor Preço</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Price Distribution Chart -->
+                <div class="chart-card">
+                    <h3>📊 Distribuição de Preços por Rota</h3>
+                    <div class="chart-container">
+                        <canvas id="priceDistributionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Price Trends Chart -->
+                <div class="chart-card">
+                    <h3>📈 Tendência de Preços (Últimos 30 Dias)</h3>
+                    <div class="chart-container">
+                        <canvas id="priceTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best Deals Section -->
+            <div class="deals-section">
+                <h3>🎯 Melhores Ofertas Encontradas</h3>
+                <div id="dealsList" class="deals-list">
+                    <!-- Deals will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>🛫 Flight Tracker Rio-California | Atualizado automaticamente a cada 3 horas</p>
+            <p>📊 Sistema desenvolvido para monitoramento inteligente de preços de voos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let priceDistributionChart = null;
+        let priceTrendsChart = null;
+
+        // API base URL (adjust for production)
+        const API_BASE_URL = window.location.origin;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+
+        // Route selector change event
+        document.getElementById('routeSelect').addEventListener('change', function() {
+            loadData();
+        });
+
+        async function loadData() {
+            showLoading();
+            hideError();
+
+            try {
+                const [stats, prices, trends, deals] = await Promise.all([
+                    fetchStats(),
+                    fetchPrices(),
+                    fetchTrends(),
+                    fetchDeals()
+                ]);
+
+                updateStats(stats);
+                updatePriceDistributionChart(prices);
+                updatePriceTrendsChart(trends);
+                updateDeals(deals);
+
+                showContent();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError();
+            }
+        }
+
+        async function fetchStats() {
+            const response = await fetch(`${API_BASE_URL}/api/stats`);
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            return await response.json();
+        }
+
+        async function fetchPrices() {
+            const route = document.getElementById('routeSelect').value;
+            const url = route ? 
+                `${API_BASE_URL}/api/prices?route=${route}&days=30` : 
+                `${API_BASE_URL}/api/prices?days=30`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch prices');
+            return await response.json();
+        }
+
+        async function fetchTrends() {
+            const response = await fetch(`${API_BASE_URL}/api/trends?days=30`);
+            if (!response.ok) throw new Error('Failed to fetch trends');
+            return await response.json();
+        }
+
+        async function fetchDeals() {
+            const response = await fetch(`${API_BASE_URL}/api/deals?limit=12`);
+            if (!response.ok) throw new Error('Failed to fetch deals');
+            return await response.json();
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalFlights').textContent = stats.total_flights || 0;
+            document.getElementById('totalAlerts').textContent = stats.total_alerts || 0;
+            document.getElementById('routeCount').textContent = Object.keys(stats.routes || {}).length;
+            
+            // Get best price from deals (will be updated when deals are loaded)
+        }
+
+        function updatePriceDistributionChart(prices) {
+            const ctx = document.getElementById('priceDistributionChart').getContext('2d');
+            
+            if (priceDistributionChart) {
+                priceDistributionChart.destroy();
+            }
+
+            // Group prices by route
+            const routeData = {};
+            prices.forEach(flight => {
+                if (!routeData[flight.route]) {
+                    routeData[flight.route] = [];
+                }
+                routeData[flight.route].push(flight.price);
+            });
+
+            // Calculate average prices for each route
+            const routes = Object.keys(routeData);
+            const avgPrices = routes.map(route => {
+                const prices = routeData[route];
+                return prices.reduce((sum, price) => sum + price, 0) / prices.length;
+            });
+
+            const colors = [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)', 
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)'
+            ];
+
+            priceDistributionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: routes.map(route => {
+                        const routeNames = {
+                            'GIG-LAX': 'Rio Galeão → Los Angeles',
+                            'GIG-SFO': 'Rio Galeão → San Francisco',
+                            'SDU-LAX': 'Santos Dumont → Los Angeles', 
+                            'SDU-SFO': 'Santos Dumont → San Francisco'
+                        };
+                        return routeNames[route] || route;
+                    }),
+                    datasets: [{
+                        label: 'Preço Médio (R$)',
+                        data: avgPrices,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePriceTrendsChart(trends) {
+            const ctx = document.getElementById('priceTrendsChart').getContext('2d');
+            
+            if (priceTrendsChart) {
+                priceTrendsChart.destroy();
+            }
+
+            const datasets = [];
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(255, 99, 132)', 
+                'rgb(54, 162, 235)'
+            ];
+
+            let colorIndex = 0;
+            for (const [route, data] of Object.entries(trends)) {
+                const routeNames = {
+                    'GIG-LAX': 'GIG → LAX',
+                    'GIG-SFO': 'GIG → SFO', 
+                    'SDU-LAX': 'SDU → LAX',
+                    'SDU-SFO': 'SDU → SFO'
+                };
+
+                datasets.push({
+                    label: routeNames[route] || route,
+                    data: data.map(point => ({
+                        x: point.date,
+                        y: point.avg_price
+                    })),
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length] + '20',
+                    tension: 0.4,
+                    fill: false
+                });
+                colorIndex++;
+            }
+
+            priceTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': R$ ' + 
+                                           context.parsed.y.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDeals(deals) {
+            const dealsList = document.getElementById('dealsList');
+            dealsList.innerHTML = '';
+
+            if (deals.length === 0) {
+                dealsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma oferta encontrada ainda.</p>';
+                return;
+            }
+
+            // Update best deal stat
+            if (deals.length > 0) {
+                document.getElementById('bestDeal').textContent = 
+                    'R$ ' + deals[0].price.toLocaleString('pt-BR');
+            }
+
+            deals.forEach(deal => {
+                const dealItem = document.createElement('div');
+                dealItem.className = 'deal-item';
+                
+                const routeNames = {
+                    'GIG-LAX': 'Rio Galeão → Los Angeles',
+                    'GIG-SFO': 'Rio Galeão → San Francisco',
+                    'SDU-LAX': 'Santos Dumont → Los Angeles',
+                    'SDU-SFO': 'Santos Dumont → San Francisco'
+                };
+
+                const stopsText = deal.stops === 0 ? 'Voo direto' : 
+                                 deal.stops === 1 ? '1 escala' : 
+                                 `${deal.stops} escalas`;
+
+                dealItem.innerHTML = `
+                    <div class="deal-route">${routeNames[deal.route] || deal.route}</div>
+                    <div class="deal-price">R$ ${deal.price.toLocaleString('pt-BR')}</div>
+                    <div class="deal-details">
+                        ✈️ ${deal.airline}<br>
+                        📅 Partida: ${new Date(deal.departure_date).toLocaleDateString('pt-BR')}<br>
+                        🔗 ${stopsText}
+                    </div>
+                `;
+                
+                dealsList.appendChild(dealItem);
+            });
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showContent() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

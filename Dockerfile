@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY standalone_monitor.py .
 COPY simple_health_server.py .
+COPY api.py .
+COPY web_server.py .
+COPY dashboard.html .
 COPY railway.json .
 
 # Create data directory for SQLite

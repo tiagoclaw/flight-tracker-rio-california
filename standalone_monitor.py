@@ -481,27 +481,44 @@ def main():
     # Setup environment first
     setup_environment()
     
-    # Start health check server IMMEDIATELY (Railway needs this)
-    print("🏥 Starting health check server for Railway...")
+    # Start web dashboard server (includes health check)
+    print("🌐 Starting web dashboard server...")
     
     try:
-        from simple_health_server import start_health_server
-        health_server, health_thread = start_health_server()
+        from web_server import start_web_server
         
-        if health_server:
-            print("✅ Health check server ready - Railway should detect this")
+        # Use Railway PORT or health check port
+        dashboard_port = int(os.getenv('PORT', '8000'))
+        web_server, web_thread = start_web_server(dashboard_port, 'data/flights.db')
+        
+        if web_server:
+            print("✅ Web dashboard ready - includes health check for Railway")
+            print(f"📱 Dashboard available at: http://0.0.0.0:{dashboard_port}")
         else:
-            print("⚠️  Health check server failed, using fallback...")
-            health_server = None
+            print("⚠️  Web dashboard failed, starting fallback health server...")
+            # Fallback to simple health server
+            try:
+                from simple_health_server import start_health_server
+                health_server, health_thread = start_health_server()
+            except:
+                print("⚠️  All servers failed, continuing with monitoring only...")
             
-    except ImportError:
-        print("⚠️  simple_health_server not available, using built-in health check...")
-        health_server = None
+    except ImportError as e:
+        print(f"⚠️  Web server not available: {str(e)}, using simple health check...")
+        try:
+            from simple_health_server import start_health_server
+            health_server, health_thread = start_health_server()
+        except:
+            print("⚠️  Health server also failed, continuing anyway...")
     except Exception as e:
-        print(f"⚠️  Health server error: {str(e)}, continuing anyway...")
-        health_server = None
+        print(f"⚠️  Web server error: {str(e)}, using fallback...")
+        try:
+            from simple_health_server import start_health_server
+            health_server, health_thread = start_health_server()
+        except:
+            print("⚠️  Fallback also failed, continuing anyway...")
     
-    # Give health server time to be ready for Railway
+    # Give servers time to be ready for Railway
     import time
     time.sleep(3)
     
