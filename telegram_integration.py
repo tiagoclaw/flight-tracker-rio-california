@@ -98,14 +98,21 @@ class TelegramFlightAlerts:
         
         route_display = route_names.get(route, f'🛫 {route}')
         
+        # Extract origin and destination
+        origin, destination = route.split('-')
+        
         # Format dates
         try:
             if departure_date:
                 dep_date = datetime.strptime(departure_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+                # For flight search URLs (YYYY-MM-DD format)
+                dep_date_url = departure_date
             else:
                 dep_date = 'A definir'
+                dep_date_url = None
         except:
             dep_date = departure_date or 'A definir'
+            dep_date_url = None
         
         try:
             if alert_time:
@@ -126,6 +133,9 @@ class TelegramFlightAlerts:
         else:
             drop_emoji = '📉'
         
+        # Generate flight search links
+        search_links = self.generate_search_links(origin, destination, dep_date_url)
+        
         message = f"""🚨 **ALERTA DE PREÇO - VOOS RIO → CALIFORNIA!**
 
 {route_display}
@@ -136,6 +146,9 @@ class TelegramFlightAlerts:
 
 🎯 **ÓTIMA OPORTUNIDADE!** Considere reservar rapidamente!
 
+🔍 **CONSULTAR PREÇOS:**
+{search_links}
+
 ⏰ **Detectado:** {alert_str}
 🔗 **Dashboard:** https://cheery-haupia-f7bf45.netlify.app
 
@@ -143,6 +156,48 @@ class TelegramFlightAlerts:
 *Sistema de monitoramento 24/7 ativo* 🛫"""
 
         return message
+    
+    def generate_search_links(self, origin, destination, departure_date):
+        """Generate flight search links for multiple platforms."""
+        
+        # Airport code mapping
+        airport_mapping = {
+            'GIG': 'GIG',  # Rio de Janeiro - Galeão
+            'SDU': 'SDU',  # Rio de Janeiro - Santos Dumont
+            'LAX': 'LAX',  # Los Angeles
+            'SFO': 'SFO'   # San Francisco
+        }
+        
+        origin_code = airport_mapping.get(origin, origin)
+        dest_code = airport_mapping.get(destination, destination)
+        
+        links = []
+        
+        if departure_date:
+            # Google Flights
+            google_url = f"https://www.google.com/flights?q=flights%20from%20{origin_code}%20to%20{dest_code}%20on%20{departure_date}"
+            links.append(f"✈️ [Google Flights]({google_url})")
+            
+            # Kayak
+            kayak_url = f"https://www.kayak.com/flights/{origin_code}-{dest_code}/{departure_date}"
+            links.append(f"🔍 [Kayak]({kayak_url})")
+            
+            # Skyscanner  
+            skyscanner_url = f"https://www.skyscanner.com.br/transport/flights/{origin_code.lower()}/{dest_code.lower()}/{departure_date.replace('-', '')}"
+            links.append(f"🌍 [Skyscanner]({skyscanner_url})")
+            
+            # Momondo
+            momondo_url = f"https://www.momondo.com.br/flight-search/{origin_code}-{dest_code}/{departure_date}"
+            links.append(f"💰 [Momondo]({momondo_url})")
+        else:
+            # Generic search without date
+            google_url = f"https://www.google.com/flights?q=flights%20from%20{origin_code}%20to%20{dest_code}"
+            links.append(f"✈️ [Google Flights]({google_url})")
+            
+            kayak_url = f"https://www.kayak.com/flights/{origin_code}-{dest_code}"
+            links.append(f"🔍 [Kayak]({kayak_url})")
+        
+        return '\n'.join(links)
     
     def send_telegram_alert(self, message):
         """Send alert to Telegram via message tool."""
