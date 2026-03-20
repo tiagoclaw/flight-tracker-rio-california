@@ -69,7 +69,16 @@ except Exception as e:
     print(f"⚠️  API test failed: {str(e)}")
 
 print()
-print("🛫 STEP 2: Starting Flight Monitoring...")
+print("📱 STEP 2: Starting Telegram Alert Integration...")
+try:
+    from telegram_integration import start_telegram_monitoring
+    telegram_service = start_telegram_monitoring()
+    print("✅ Telegram alert monitoring started")
+except Exception as e:
+    print(f"⚠️  Telegram integration error: {str(e)}")
+
+print()
+print("🛫 STEP 3: Starting Flight Monitoring...")
 
 # Start flight monitoring in background
 def run_monitoring():
@@ -94,6 +103,7 @@ print("✅ Flight monitoring started in background")
 print()
 print("🎯 SYSTEM STATUS:")
 print("   🌐 API Server: Running (Priority) - WITH CORS HEADERS")
+print("   📱 Telegram Alerts: Running (Background) - Auto-notify on price drops")
 print("   🛫 Flight Monitoring: Running (Background)")  
 print("   🏥 Health Checks: Active")
 print("   📊 Database: Connected")

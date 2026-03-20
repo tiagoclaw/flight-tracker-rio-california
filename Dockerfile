@@ -25,6 +25,7 @@ COPY dashboard.html .
 COPY railway_start.py .
 COPY railway_start_fixed.py .
 COPY simple_api_server.py .
+COPY telegram_integration.py .
 COPY railway.json .
 
 # Create data directory for SQLite
